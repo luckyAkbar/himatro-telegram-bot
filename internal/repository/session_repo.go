@@ -31,3 +31,25 @@ func (r *sessionRepo) Create(ctx context.Context, session *model.Session) error 
 
 	return nil
 }
+
+func (r *sessionRepo) FindActiveSessionByUserID(ctx context.Context, userID int64) (*model.Session, error) {
+	logger := logrus.WithFields(logrus.Fields{
+		"ctx":    utils.DumpIncomingContext(ctx),
+		"userID": userID,
+	})
+
+	session := &model.Session{}
+	err := r.db.WithContext(ctx).Model(&model.Session{}).
+		Limit(1).Order("expired_at DESC").
+		Where("user_id = ?", userID).Take(session).Error
+
+	switch err {
+	default:
+		logger.Error(err)
+		return nil, err
+	case gorm.ErrRecordNotFound:
+		return nil, ErrNotFound
+	case nil:
+		return session, nil
+	}
+}
