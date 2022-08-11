@@ -60,6 +60,20 @@ func jsonify[T any](target T, data []string) (string, error) {
 	return string(res), err
 }
 
+// func textify(source any) string {
+// 	var sb strings.Builder
+// 	e := reflect.ValueOf(source).Elem()
+
+// 	for i := 0; i < e.NumField(); i++ {
+// 		field := e.Type().Field(i).Name
+// 		value := e.Field(i).Interface()
+
+// 		sb.Write([]byte(fmt.Sprintf("%s: %v\n", field, value)))
+// 	}
+
+// 	return sb.String()
+// }
+
 func replyRegisterCommandHelp(b *gotgbot.Bot, ctx *ext.Context) (*gotgbot.Message, error) {
 	return ctx.EffectiveMessage.Reply(
 		b,
@@ -87,6 +101,39 @@ func replyLoginCommandHelp(b *gotgbot.Bot, ctx *ext.Context) (*gotgbot.Message, 
 	)
 }
 
+func replyGetAbsentFormCommandHelp(b *gotgbot.Bot, ctx *ext.Context) (*gotgbot.Message, error) {
+	return ctx.EffectiveMessage.Reply(
+		b,
+		`usage: /get-absent-form <form ID>
+
+		example: /get-absent-form 123456789
+		`,
+		&gotgbot.SendMessageOpts{
+			ReplyToMessageId: ctx.Message.MessageId,
+		},
+	)
+}
+
+func replyFillAbsentFormCommandHelp(b *gotgbot.Bot, ctx *ext.Context) (*gotgbot.Message, error) {
+	return ctx.EffectiveMessage.Reply(
+		b,
+		`usage: /fill-absent-form <form ID>, <status>, <reason>
+
+		example: /get-absent-form 123456789, EXECUSE, I have to help my mom
+
+		note: remember to use the commas, and don't flip the order of the input.
+		also, the parameters status valid value is only one of the following:
+		1. PRESENT
+		2. EXECUSE
+		3. PENDING PRESENT
+		4. PENDING EXECUSE
+		`,
+		&gotgbot.SendMessageOpts{
+			ReplyToMessageId: ctx.Message.MessageId,
+		},
+	)
+}
+
 func replyErrorMessageToUser(b *gotgbot.Bot, ctx *ext.Context, actualErr error) error {
 	_, err := ctx.EffectiveMessage.Reply(
 		b,
@@ -101,10 +148,32 @@ func replyErrorMessageToUser(b *gotgbot.Bot, ctx *ext.Context, actualErr error) 
 	return actualErr
 }
 
-func replySuccessMessageToUser(b *gotgbot.Bot, ctx *ext.Context, msg string) error {
+func replySuccessMessageToUser(b *gotgbot.Bot, ctx *ext.Context, input any) error {
+	// res, err := json.Marshal(input)
+	// if err != nil {
+	// 	logrus.Error(err)
+	// 	return err
+	// }
+
+	smg := fmt.Sprintf("%+v", input)
+
 	_, err := ctx.EffectiveMessage.Reply(
 		b,
-		msg,
+		//string(res),
+		smg,
+		&gotgbot.SendMessageOpts{
+			ReplyToMessageId: ctx.Message.MessageId,
+		},
+	)
+
+	logIfError(err)
+	return err
+}
+
+func replyTextMessageToUser(b *gotgbot.Bot, ctx *ext.Context, text string) error {
+	_, err := ctx.EffectiveMessage.Reply(
+		b,
+		text,
 		&gotgbot.SendMessageOpts{
 			ReplyToMessageId: ctx.Message.MessageId,
 		},
