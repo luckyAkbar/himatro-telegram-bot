@@ -15,5 +15,6 @@ type Session struct {
 
 type SessionRepo interface {
 	Create(ctx context.Context, session *Session) error
+	FindActiveSessionByUserID(ctx context.Context, userID int64) (*Session, error)
 	// FindByAccessToken(ctx context.Context, accessToken string) (*Session, error)
 }

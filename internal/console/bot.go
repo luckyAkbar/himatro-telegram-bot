@@ -40,7 +40,10 @@ func runBot(cmd *cobra.Command, args []string) {
 	userRepo := repository.NewUserRepository(db.PostgresDB)
 	userUsecase := usecase.NewUserUsecase(userRepo, himatroClient, sessionRepo)
 
-	handler := handler.New(userUsecase)
+	authUsecase := usecase.NewAuthUsecase(sessionRepo)
+	absentUsecase := usecase.NewAbsentUsecase(himatroClient)
+
+	handler := handler.New(userUsecase, authUsecase, absentUsecase)
 
 	b, err := gotgbot.NewBot(config.Token(), &gotgbot.BotOpts{
 		Client:            http.Client{},
@@ -70,6 +73,8 @@ func runBot(cmd *cobra.Command, args []string) {
 
 	dispatcher.AddHandler(handlers.NewCommand("register", handler.RegisterHandler()))
 	dispatcher.AddHandler(handlers.NewCommand("login", handler.LoginHandler()))
+	dispatcher.AddHandler(handlers.NewCommand("get-absent-form", handler.GetAbsentFormHandler()))
+	dispatcher.AddHandler(handlers.NewCommand("fill-absent-form", handler.FillAbsentFormHandler()))
 
 	// Start receiving updates.
 	err = updater.StartPolling(b, &ext.PollingOpts{
